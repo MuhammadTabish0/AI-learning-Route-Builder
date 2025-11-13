@@ -169,15 +169,95 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Right Image */}
-          <div>
-            <div className="bg-gradient-to-br from-teal-400 to-teal-600 rounded-3xl p-2">
-              <img
-                src="/students-studying-together-in-classroom.jpg"
-                alt="Students studying"
-                className="w-full h-96 object-cover rounded-2xl"
-              />
-            </div>
+          {/* Right Animated Section */}
+          <div className="relative h-96">
+            <style>{`
+              @keyframes float-up-down {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-20px); }
+              }
+              @keyframes rotate {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              @keyframes pulse-scale {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+              }
+              .animate-float { animation: float-up-down 3s ease-in-out infinite; }
+              .animate-float-delay-1 { animation: float-up-down 3s ease-in-out infinite 0.5s; }
+              .animate-float-delay-2 { animation: float-up-down 3s ease-in-out infinite 1s; }
+              .animate-rotate { animation: rotate 20s linear infinite; }
+              .animate-pulse-slow { animation: pulse-scale 2s ease-in-out infinite; }
+            `}</style>
+
+            <svg viewBox="0 0 400 400" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+              {/* Background glow */}
+              <circle cx="200" cy="200" r="150" fill="url(#grad)" opacity="0.1" />
+              <defs>
+                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#14b8a6" />
+                  <stop offset="100%" stopColor="#06b6d4" />
+                </linearGradient>
+              </defs>
+
+              {/* Central Book - Animated */}
+              <g className="animate-float" style={{ transformOrigin: "200px 200px" }}>
+                <rect x="170" y="150" width="60" height="100" fill="#14b8a6" rx="4" />
+                <line x1="200" y1="150" x2="200" y2="250" stroke="#06b6d4" strokeWidth="2" />
+                <rect x="175" y="160" width="50" height="8" fill="#ffffff" opacity="0.3" rx="2" />
+                <rect x="175" y="175" width="50" height="6" fill="#ffffff" opacity="0.2" rx="1" />
+                <rect x="175" y="187" width="50" height="6" fill="#ffffff" opacity="0.2" rx="1" />
+              </g>
+
+              {/* Lightbulb - Top Right */}
+              <g className="animate-float-delay-1" style={{ transformOrigin: "320px 100px" }}>
+                <circle cx="320" cy="100" r="20" fill="#fbbf24" opacity="0.9" />
+                <rect x="310" y="115" width="20" height="15" fill="#f59e0b" rx="2" />
+                <line x1="312" y1="130" x2="328" y2="130" stroke="#f59e0b" strokeWidth="2" />
+              </g>
+
+              {/* Rocket - Top Left */}
+              <g className="animate-float-delay-2" style={{ transformOrigin: "80px 120px" }}>
+                <path d="M 80 80 L 85 120 L 80 125 L 75 120 Z" fill="#ef4444" />
+                <circle cx="80" cy="70" r="12" fill="#3b82f6" />
+                <ellipse cx="70" cy="130" rx="6" ry="10" fill="#f59e0b" opacity="0.7" />
+                <ellipse cx="90" cy="130" rx="6" ry="10" fill="#f59e0b" opacity="0.7" />
+              </g>
+
+              {/* Brain Icon - Bottom Right */}
+              <g className="animate-pulse-slow" style={{ transformOrigin: "300px 300px" }}>
+                <circle cx="300" cy="300" r="18" fill="none" stroke="#06b6d4" strokeWidth="2" opacity="0.5" />
+                <path
+                  d="M 290 295 Q 285 290 290 285 Q 295 290 300 285 Q 305 290 310 285 Q 315 290 310 295"
+                  fill="#06b6d4"
+                  opacity="0.7"
+                />
+                <line x1="295" y1="305" x2="295" y2="315" stroke="#06b6d4" strokeWidth="1.5" opacity="0.6" />
+                <line x1="305" y1="305" x2="305" y2="315" stroke="#06b6d4" strokeWidth="1.5" opacity="0.6" />
+              </g>
+
+              {/* Checkmark - Bottom Left */}
+              <g className="animate-float" style={{ transformOrigin: "100px 300px", animationDelay: "1.5s" }}>
+                <circle cx="100" cy="300" r="20" fill="#10b981" opacity="0.8" />
+                <path
+                  d="M 90 300 L 97 310 L 115 290"
+                  stroke="white"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+
+              {/* Decorative dots */}
+              <g className="animate-rotate" style={{ transformOrigin: "200px 200px" }}>
+                <circle cx="200" cy="80" r="3" fill="#14b8a6" opacity="0.6" />
+                <circle cx="320" cy="200" r="3" fill="#06b6d4" opacity="0.6" />
+                <circle cx="200" cy="320" r="3" fill="#14b8a6" opacity="0.6" />
+                <circle cx="80" cy="200" r="3" fill="#06b6d4" opacity="0.6" />
+              </g>
+            </svg>
           </div>
         </div>
       </section>
