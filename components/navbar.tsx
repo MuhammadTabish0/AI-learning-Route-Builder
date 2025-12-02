@@ -1,11 +1,40 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
-import { Menu, X } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Menu, X, User } from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    const checkUser = async () => {
+      if (!supabase) return
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+        setUser(session?.user ?? null)
+      })
+
+      return () => {
+        authListener.subscription.unsubscribe()
+      }
+    }
+    checkUser()
+  }, [])
+
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut()
+      setUser(null)
+      router.push("/")
+    }
+  }
 
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
@@ -20,12 +49,17 @@ export function Navbar() {
             <Link href="/" className="text-gray-700 hover:text-teal-500 font-medium text-sm">
               Home
             </Link>
+            <Link href="/generate" className="text-gray-700 hover:text-teal-500 font-medium text-sm flex items-center gap-1">
+              <span className="text-purple-600">✨</span> AI Roadmap
+            </Link>
             <Link href="/courses" className="text-gray-700 hover:text-teal-500 font-medium text-sm">
               Courses
             </Link>
-            <Link href="/membership" className="text-gray-700 hover:text-teal-500 font-medium text-sm">
-              Membership
-            </Link>
+            {user && (
+              <Link href="/dashboard" className="text-gray-700 hover:text-teal-500 font-medium text-sm">
+                Dashboard
+              </Link>
+            )}
             <Link href="/about" className="text-gray-700 hover:text-teal-500 font-medium text-sm">
               About Us
             </Link>
@@ -33,23 +67,32 @@ export function Navbar() {
 
           {/* Right side buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <select className="text-sm text-gray-700 bg-transparent border-0 cursor-pointer flex items-center gap-1">
-              <option>English</option>
-              <option>Spanish</option>
-              <option>French</option>
-            </select>
-            <Link
-              href="/login"
-              className="px-6 py-2 border-2 border-teal-500 text-teal-500 rounded-full font-medium text-sm hover:bg-teal-50"
-            >
-              Login
-            </Link>
-            <Link
-              href="/signup"
-              className="px-6 py-2 bg-teal-500 text-white rounded-full font-medium text-sm hover:bg-teal-600"
-            >
-              Sign Up
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">Hi, {user.user_metadata?.username || "User"}</span>
+                <button
+                  onClick={handleLogout}
+                  className="px-6 py-2 border-2 border-gray-200 text-gray-600 rounded-full font-medium text-sm hover:bg-gray-50"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-6 py-2 border-2 border-teal-500 text-teal-500 rounded-full font-medium text-sm hover:bg-teal-50"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-6 py-2 bg-teal-500 text-white rounded-full font-medium text-sm hover:bg-teal-600"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -64,28 +107,44 @@ export function Navbar() {
             <Link href="/" className="text-gray-700 hover:text-teal-500 font-medium">
               Home
             </Link>
+            <Link href="/generate" className="text-gray-700 hover:text-teal-500 font-medium flex items-center gap-2">
+              <span className="text-purple-600">✨</span> AI Roadmap
+            </Link>
             <Link href="/courses" className="text-gray-700 hover:text-teal-500 font-medium">
               Courses
             </Link>
-            <Link href="/membership" className="text-gray-700 hover:text-teal-500 font-medium">
-              Membership
-            </Link>
+            {user && (
+              <Link href="/dashboard" className="text-gray-700 hover:text-teal-500 font-medium">
+                Dashboard
+              </Link>
+            )}
             <Link href="/about" className="text-gray-700 hover:text-teal-500 font-medium">
               About Us
             </Link>
             <div className="flex gap-2 pt-2">
-              <Link
-                href="/login"
-                className="flex-1 px-4 py-2 border-2 border-teal-500 text-teal-500 rounded-full font-medium text-sm text-center hover:bg-teal-50"
-              >
-                Login
-              </Link>
-              <Link
-                href="/signup"
-                className="flex-1 px-4 py-2 bg-teal-500 text-white rounded-full font-medium text-sm text-center hover:bg-teal-600"
-              >
-                Sign Up
-              </Link>
+              {user ? (
+                <button
+                  onClick={handleLogout}
+                  className="flex-1 px-4 py-2 border-2 border-gray-200 text-gray-600 rounded-full font-medium text-sm text-center hover:bg-gray-50"
+                >
+                  Logout
+                </button>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="flex-1 px-4 py-2 border-2 border-teal-500 text-teal-500 rounded-full font-medium text-sm text-center hover:bg-teal-50"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="flex-1 px-4 py-2 bg-teal-500 text-white rounded-full font-medium text-sm text-center hover:bg-teal-600"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}

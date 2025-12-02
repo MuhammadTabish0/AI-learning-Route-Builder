@@ -1,37 +1,33 @@
 "use client"
 
+import { useState, useEffect } from "react"
+
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import Link from "next/link"
 import { ChevronRight, ChevronLeft } from "lucide-react"
 
 export default function CoursesPage() {
-  const recentCourses = [
-    {
-      id: 1,
-      title: "AWS Certified Solutions Architect",
-      progress: 3,
-      total: 7,
-      image: "/aws-architecture.jpg",
-      instructor: "Uma",
-    },
-    {
-      id: 2,
-      title: "AWS Certified Solutions Architect",
-      progress: 3,
-      total: 7,
-      image: "/aws-architecture.jpg",
-      instructor: "Uma",
-    },
-    {
-      id: 3,
-      title: "AWS Certified Solutions Architect",
-      progress: 3,
-      total: 7,
-      image: "/aws-architecture.jpg",
-      instructor: "Uma",
-    },
-  ]
+  const [recentCourses, setRecentCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch("/api/courses");
+        if (response.ok) {
+          const data = await response.json();
+          setRecentCourses(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch courses:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   const categories = [
     { name: "Design", icon: "✏️", color: "bg-emerald-100" },

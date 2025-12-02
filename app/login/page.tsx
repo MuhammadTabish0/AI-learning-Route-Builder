@@ -5,10 +5,45 @@ import { Footer } from "@/components/footer"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLogin, setIsLogin] = useState(true)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    try {
+      if (isLogin) {
+        const { error } = await supabase!.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (error) throw error
+        router.push("/")
+      } else {
+        const { error } = await supabase!.auth.signUp({
+          email,
+          password,
+        })
+        if (error) throw error
+        alert("Registration successful! Please check your email to confirm.")
+      }
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <main className="min-h-screen bg-white flex flex-col">
@@ -24,39 +59,35 @@ export default function LoginPage() {
           <div className="flex gap-2 mb-8">
             <button
               onClick={() => setIsLogin(true)}
-              className={`flex-1 py-3 rounded-full font-medium text-sm transition-colors ${
-                isLogin ? "bg-teal-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
+              className={`flex-1 py-3 rounded-full font-medium text-sm transition-colors ${isLogin ? "bg-teal-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
             >
               Login
             </button>
             <button
               onClick={() => setIsLogin(false)}
-              className={`flex-1 py-3 rounded-full font-medium text-sm transition-colors ${
-                !isLogin ? "bg-teal-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
+              className={`flex-1 py-3 rounded-full font-medium text-sm transition-colors ${!isLogin ? "bg-teal-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
             >
               Register
             </button>
           </div>
 
-          <form className="space-y-6">
-            {!isLogin && (
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Email Address</label>
-                <input
-                  type="email"
-                  placeholder="Enter your Email Address"
-                  className="w-full px-4 py-3 rounded-full border-2 border-teal-200 focus:outline-none focus:border-teal-500 placeholder-gray-400"
-                />
+          <form onSubmit={handleAuth} className="space-y-6">
+            {error && (
+              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg">
+                {error}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">User name</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">Email Address</label>
               <input
-                type="text"
-                placeholder="Enter your User name"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your Email Address"
                 className="w-full px-4 py-3 rounded-full border-2 border-teal-200 focus:outline-none focus:border-teal-500 placeholder-gray-400"
               />
             </div>
@@ -66,6 +97,9 @@ export default function LoginPage() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your Password"
                   className="w-full px-4 py-3 rounded-full border-2 border-teal-200 focus:outline-none focus:border-teal-500 placeholder-gray-400"
                 />
@@ -79,23 +113,12 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {isLogin && (
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" className="rounded" />
-                  <span className="text-gray-700">Remember me</span>
-                </label>
-                <Link href="#" className="text-gray-700 hover:text-teal-500">
-                  Forgot Password?
-                </Link>
-              </div>
-            )}
-
             <button
               type="submit"
-              className="w-full py-3 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600"
+              disabled={loading}
+              className="w-full py-3 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600 disabled:opacity-50"
             >
-              {isLogin ? "Login" : "Register"}
+              {loading ? "Processing..." : (isLogin ? "Login" : "Register")}
             </button>
           </form>
         </div>

@@ -29,12 +29,15 @@ export default function Home() {
                 >
                   Join for free
                 </Link>
-                <button className="inline-flex items-center justify-center px-6 py-3 bg-white text-teal-500 rounded-full font-medium hover:bg-gray-100 transition gap-2">
+                <Link
+                  href="/about"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-white text-teal-500 rounded-full font-medium hover:bg-gray-100 transition gap-2"
+                >
                   <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs">▶</span>
                   </div>
                   Watch how it works
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -71,9 +74,9 @@ export default function Home() {
                     <p className="text-sm font-semibold text-gray-900">Latest AI Models</p>
                   </div>
                 </div>
-                <button className="mt-3 px-4 py-2 bg-pink-500 text-white rounded-full text-sm font-medium hover:bg-pink-600 w-full">
+                <Link href="/signup" className="block mt-3 px-4 py-2 bg-pink-500 text-white rounded-full text-sm font-medium hover:bg-pink-600 w-full text-center">
                   Join Now
-                </button>
+                </Link>
               </div>
             </div>
           </div>
