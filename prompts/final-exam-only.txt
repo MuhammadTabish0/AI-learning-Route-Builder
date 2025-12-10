@@ -1,0 +1,34 @@
+# Final Exam Generator
+
+Generate a comprehensive final exam for the course "{{COURSE_NAME}}". The exam should cover all chapters: {{CHAPTER_LIST}}.
+
+Return ONLY a JSON object with this structure:
+
+{
+  "questions": [
+    {
+      "question": "Question text",
+      "type": "MCQ",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "answer": "Option A",
+      "explanation": "Explanation"
+    },
+    {
+      "question": "Question text",
+      "type": "Short",
+      "answer": "Answer",
+      "explanation": "Explanation"
+    },
+    {
+      "question": "Problem statement",
+      "type": "Problem",
+      "answer": "Solution",
+      "explanation": "Explanation"
+    }
+  ]
+}
+
+Generate 10-15 questions total, mixing MCQs, short questions, and problems. Ensure questions cover different chapters.
+
+Return ONLY valid JSON, no additional text.
+

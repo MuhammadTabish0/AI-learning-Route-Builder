@@ -1,0 +1,21 @@
+Generate a comprehensive university-level subject roadmap for: {{subject}}.
+
+Requirements:
+- Provide only chapter titles in logical order
+- Base the outline on widely used textbooks and standard curriculum
+- Ensure chapters flow logically from basic to advanced concepts
+- Include 8-15 chapters depending on the subject complexity
+- Use clear, descriptive chapter names
+
+Return ONLY a valid JSON object in this exact format:
+{
+  "subject": "{{subject}}",
+  "chapters": [
+    "Chapter 1 Name",
+    "Chapter 2 Name",
+    ...
+  ]
+}
+
+Do not include any prose, explanations, or markdown formatting outside the JSON object.
+

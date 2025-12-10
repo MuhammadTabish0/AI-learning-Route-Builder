@@ -1,0 +1,55 @@
+Generate detailed, accurate, and comprehensive notes for the chapter: {{chapter}} in the subject: {{subject}}.
+
+Requirements:
+- Content should be at university/college level
+- Ensure accuracy and correctness of all information
+- Include step-by-step examples with clear explanations
+- Use proper mathematical notation where applicable
+- Structure the content clearly
+
+The notes must include the following sections:
+
+1. **Definitions**: All key terms and definitions used in this chapter
+2. **Concepts**: Important concepts, principles, and theories explained in detail
+3. **Theorems**: All theorems, laws, or important propositions (include statements and brief explanations)
+4. **Examples**: At least 3-5 step-by-step worked examples demonstrating key concepts
+5. **Summary**: A concise summary of the chapter highlighting main takeaways
+
+Return ONLY a valid JSON object in this exact format:
+{
+  "chapter": "{{chapter}}",
+  "subject": "{{subject}}",
+  "notes": {
+    "definitions": [
+      {
+        "term": "Term name",
+        "definition": "Complete definition"
+      }
+    ],
+    "concepts": [
+      {
+        "title": "Concept title",
+        "explanation": "Detailed explanation"
+      }
+    ],
+    "theorems": [
+      {
+        "name": "Theorem name",
+        "statement": "Theorem statement",
+        "explanation": "Brief explanation or significance"
+      }
+    ],
+    "examples": [
+      {
+        "title": "Example title",
+        "problem": "Problem statement",
+        "solution": "Step-by-step solution",
+        "explanation": "Explanation of steps"
+      }
+    ],
+    "summary": "Comprehensive summary of the chapter covering all key points"
+  }
+}
+
+Do not include any prose, explanations, or markdown formatting outside the JSON object.
+

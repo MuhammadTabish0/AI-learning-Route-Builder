@@ -1,0 +1,34 @@
+# Chapter Assessment Generator
+
+Generate practice questions for the chapter "{{CHAPTER_TITLE}}" in the course "{{COURSE_NAME}}".
+
+Return ONLY a JSON object with this structure:
+
+{
+  "chapterTitle": "{{CHAPTER_TITLE}}",
+  "mcqs": [
+    {
+      "question": "Question text",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "Option A",
+      "explanation": "Why this is correct"
+    }
+  ],
+  "shortQuestions": [
+    {
+      "question": "Question text",
+      "modelAnswer": "Model answer"
+    }
+  ],
+  "numericalProblems": [
+    {
+      "problem": "Problem statement",
+      "solution": "Complete solution"
+    }
+  ]
+}
+
+Generate 3-5 MCQs, 2-3 short questions, and 2-3 numerical problems.
+
+Return ONLY valid JSON, no additional text.
+

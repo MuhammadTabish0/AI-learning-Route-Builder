@@ -1,0 +1,54 @@
+Generate comprehensive practice questions for the chapter: {{chapter}} in the subject: {{subject}}.
+
+Requirements:
+- Questions should be at university/college level
+- Include a variety of difficulty levels (easy, medium, hard)
+- Ensure questions are relevant to the chapter content
+- Provide complete, detailed solutions for all questions
+
+The questions must include:
+
+1. **MCQs**: 5-8 multiple choice questions with 4 options each
+2. **Short Questions**: 3-5 short answer questions
+3. **Numerical Problems**: 3-5 numerical problems with step-by-step solutions (if applicable to the subject)
+4. **Solutions**: Complete solutions for all questions
+
+Return ONLY a valid JSON object in this exact format:
+{
+  "chapter": "{{chapter}}",
+  "subject": "{{subject}}",
+  "questions": {
+    "mcqs": [
+      {
+        "id": 1,
+        "question": "Question text",
+        "options": {
+          "a": "Option A",
+          "b": "Option B",
+          "c": "Option C",
+          "d": "Option D"
+        },
+        "correctAnswer": "a",
+        "explanation": "Explanation of why this is correct"
+      }
+    ],
+    "short": [
+      {
+        "id": 1,
+        "question": "Question text",
+        "answer": "Complete answer with explanation"
+      }
+    ],
+    "numerical": [
+      {
+        "id": 1,
+        "problem": "Problem statement",
+        "solution": "Step-by-step solution",
+        "answer": "Final answer"
+      }
+    ]
+  }
+}
+
+Do not include any prose, explanations, or markdown formatting outside the JSON object.
+

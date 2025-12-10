@@ -19,6 +19,9 @@ yarn-error.log*
 # env files
 .env*
 
+# data files (user submissions)
+/data/
+
 # vercel
 .vercel
 

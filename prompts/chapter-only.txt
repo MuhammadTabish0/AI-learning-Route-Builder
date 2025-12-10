@@ -1,0 +1,29 @@
+# Single Chapter Content Generator
+
+Generate detailed teaching material for ONE chapter: "{{CHAPTER_TITLE}}" in the course "{{COURSE_NAME}}".
+
+Return ONLY a JSON object with this structure:
+
+{
+  "chapterTitle": "{{CHAPTER_TITLE}}",
+  "learningObjectives": ["objective 1", "objective 2", "objective 3"],
+  "summary": "A comprehensive 2-3 paragraph summary of the chapter",
+  "definitions": ["definition 1", "definition 2", "definition 3"],
+  "keyConcepts": ["concept 1", "concept 2", "concept 3"],
+  "theoriesOrRules": [
+    { "name": "Theory Name", "statement": "Theory statement" }
+  ],
+  "workedExamples": [
+    {
+      "exampleNumber": 1,
+      "problem": "Problem statement",
+      "stepByStepSolution": "Detailed step-by-step solution"
+    }
+  ],
+  "commonMistakes": ["mistake 1", "mistake 2"]
+}
+
+Keep content concise but comprehensive. Generate 3-5 definitions, 3-5 key concepts, 2-3 theories/rules, 2-3 worked examples, and 2-3 common mistakes.
+
+Return ONLY valid JSON, no additional text.
+

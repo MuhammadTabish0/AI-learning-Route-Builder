@@ -1,0 +1,42 @@
+Generate a curated list of external learning resources for the subject: {{subject}}.
+
+Requirements:
+- Include only publicly available, legal resources
+- Prioritize high-quality, reputable sources
+- Include a mix of video lectures, articles, and books
+- Focus on resources that are commonly used in university curricula
+
+Return ONLY a valid JSON object in this exact format:
+{
+  "subject": "{{subject}}",
+  "resources": {
+    "videos": [
+      {
+        "title": "Video title",
+        "url": "YouTube or other video platform URL",
+        "description": "Brief description of the video content",
+        "channel": "Channel or creator name"
+      }
+    ],
+    "articles": [
+      {
+        "title": "Article title",
+        "url": "Article URL",
+        "description": "Brief description",
+        "source": "Source name"
+      }
+    ],
+    "books": [
+      {
+        "title": "Book title",
+        "author": "Author name",
+        "description": "Brief description",
+        "isbn": "ISBN if available",
+        "note": "Note about availability (e.g., 'Available on library platforms', 'Open access')"
+      }
+    ]
+  }
+}
+
+Do not include any prose, explanations, or markdown formatting outside the JSON object.
+
