@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase-server';
 import { writeFile, readFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
@@ -27,38 +28,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read registrations to authenticate
-    const dataDir = join(process.cwd(), 'data');
-    const registrationsFilePath = join(dataDir, 'registrations.json');
-    const loginsFilePath = join(dataDir, 'logins.json');
-
     try {
-      // Create data directory if it doesn't exist
-      if (!existsSync(dataDir)) {
-        await mkdir(dataDir, { recursive: true });
-      }
-
-      // Read existing registrations
-      let registrations = [];
-      try {
-        const fileContent = await readFile(registrationsFilePath, 'utf-8');
-        registrations = JSON.parse(fileContent);
-      } catch (error) {
-        // File doesn't exist yet, no users registered
-        registrations = [];
-      }
-
       // Find user by username (case-insensitive)
-      const user = registrations.find(
-        (u: any) => u.username.toLowerCase() === username.toLowerCase()
-      );
+      // Note: Supabase's ilike requires a pattern, so we'll use eq and handle case in application
+      const { data: users, error: queryError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', username.toLowerCase())
+        .limit(1);
 
-      if (!user) {
+      if (queryError) {
+        console.error('Error querying users:', queryError);
+        return NextResponse.json(
+          { error: 'Database error during authentication' },
+          { status: 500 }
+        );
+      }
+
+      if (!users || users.length === 0) {
         return NextResponse.json(
           { error: 'Invalid username or password' },
           { status: 401 }
         );
       }
+
+      const user = users[0];
 
       // Verify password
       if (user.password !== password) {
@@ -82,8 +76,15 @@ export async function POST(request: NextRequest) {
       console.log('Timestamp:', new Date().toISOString());
       console.log('==================');
 
-      // Save login attempt to logins.json
+      // Save login attempt to logins.json (optional, for logging purposes)
       try {
+        const dataDir = join(process.cwd(), 'data');
+        const loginsFilePath = join(dataDir, 'logins.json');
+        
+        if (!existsSync(dataDir)) {
+          await mkdir(dataDir, { recursive: true });
+        }
+
         let loginHistory = [];
         try {
           const loginContent = await readFile(loginsFilePath, 'utf-8');
@@ -97,6 +98,7 @@ export async function POST(request: NextRequest) {
         console.log('Login data saved to:', loginsFilePath);
       } catch (fileError) {
         console.error('Failed to save login history:', fileError);
+        // Don't fail the login if logging fails
       }
 
       // Return success with user data (without password)
@@ -107,14 +109,14 @@ export async function POST(request: NextRequest) {
           data: {
             username: user.username,
             email: user.email,
-            accountType: user.accountType,
-            subscriptionPlan: user.subscriptionPlan,
+            accountType: user.account_type,
+            subscriptionPlan: user.subscription_plan,
           }
         },
         { status: 200 }
       );
-    } catch (fileError) {
-      console.error('Login error:', fileError);
+    } catch (error) {
+      console.error('Login error:', error);
       return NextResponse.json(
         { error: 'Internal server error during authentication' },
         { status: 500 }

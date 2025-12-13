@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, readFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { supabase } from '@/lib/supabase-server';
 
 /**
  * POST /api/register
@@ -27,80 +25,80 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save to JSON file
-    const dataDir = join(process.cwd(), 'data');
-    const dataFilePath = join(dataDir, 'registrations.json');
-    
     try {
-      // Create data directory if it doesn't exist
-      if (!existsSync(dataDir)) {
-        await mkdir(dataDir, { recursive: true });
-      }
-
-      // Read existing data
-      let existingData = [];
-      try {
-        const fileContent = await readFile(dataFilePath, 'utf-8');
-        existingData = JSON.parse(fileContent);
-      } catch (error) {
-        // File doesn't exist yet, start with empty array
-        existingData = [];
-      }
-
       // Check if user already exists (by email or username)
-      const userExists = existingData.some(
-        (user: any) => user.email.toLowerCase() === email.toLowerCase() || user.username.toLowerCase() === username.toLowerCase()
-      );
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('users')
+        .select('email, username')
+        .or(`email.eq.${email.toLowerCase()},username.eq.${username.toLowerCase()}`)
+        .limit(1);
 
-      if (userExists) {
+      if (checkError) {
+        console.error('Error checking existing users:', checkError);
+        return NextResponse.json(
+          { error: 'Database error while checking user existence' },
+          { status: 500 }
+        );
+      }
+
+      if (existingUsers && existingUsers.length > 0) {
         return NextResponse.json(
           { error: 'User already exists with this email or username' },
           { status: 409 }
         );
       }
 
-      // Create registration data object (store actual password for authentication)
-      const registrationData = {
-        email: email.toLowerCase(),
-        username: username.toLowerCase(),
-        password, // Store actual password for authentication
-        accountType: accountType || 'Student',
-        subscriptionPlan: subscriptionPlan || 'Free',
-        timestamp: new Date().toISOString(),
-      };
+      // Insert new user into Supabase
+      const { data: newUser, error: insertError } = await supabase
+        .from('users')
+        .insert({
+          email: email.toLowerCase(),
+          username: username.toLowerCase(),
+          password, // Note: In production, passwords should be hashed
+          account_type: accountType || 'Student',
+          subscription_plan: subscriptionPlan || 'Free',
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error inserting user:', insertError);
+        return NextResponse.json(
+          { error: 'Failed to register user: ' + insertError.message },
+          { status: 500 }
+        );
+      }
 
       // Log to console (mask password in logs)
       console.log('=== USER REGISTRATION ===');
       console.log('Registration Data:', {
-        ...registrationData,
+        email: newUser.email,
+        username: newUser.username,
+        account_type: newUser.account_type,
+        subscription_plan: newUser.subscription_plan,
         password: '***', // Mask in logs
       });
       console.log('Timestamp:', new Date().toISOString());
       console.log('========================');
-
-      // Add new registration
-      existingData.push(registrationData);
-
-      // Write back to file
-      await writeFile(dataFilePath, JSON.stringify(existingData, null, 2), 'utf-8');
-      console.log('Registration data saved to:', dataFilePath);
 
       return NextResponse.json(
         { 
           success: true, 
           message: 'Registration successful',
           data: {
-            ...registrationData,
-            password: '***', // Don't send password back to client
+            email: newUser.email,
+            username: newUser.username,
+            accountType: newUser.account_type,
+            subscriptionPlan: newUser.subscription_plan,
           }
         },
         { status: 200 }
       );
-    } catch (fileError) {
-      // If file operations fail, still log to console
-      console.error('Failed to save to file, but data logged to console:', fileError);
+    } catch (error) {
+      console.error('Registration error:', error);
       return NextResponse.json(
-        { error: 'Failed to save registration data' },
+        { error: 'Internal server error during registration' },
         { status: 500 }
       );
     }
