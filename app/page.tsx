@@ -13,65 +13,61 @@ export default function Home() {
       {/* Hero Section with Cyan Background */}
       <section className="relative bg-teal-500 px-4 py-20 md:py-32 overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <div className="flex flex-col justify-center">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-8 leading-tight">
                 <span className="text-orange-400">SwiftEd</span> Online is now
                 <br />
                 much easier
               </h1>
 
-              <div className="flex flex-col sm:flex-row gap-4 mb-12">
+              <div className="mb-8">
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center px-6 py-3 bg-teal-700 text-white rounded-full font-medium hover:bg-teal-800 transition"
+                  className="inline-flex items-center justify-center px-8 py-4 bg-teal-700 text-white rounded-full font-medium hover:bg-teal-800 transition text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   Join for free
                 </Link>
-                <button className="inline-flex items-center justify-center px-6 py-3 bg-white text-teal-500 rounded-full font-medium hover:bg-gray-100 transition gap-2">
-                  <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs">▶</span>
-                  </div>
-                  Watch how it works
-                </button>
               </div>
             </div>
 
-            {/* Right Floating Cards */}
-            <div className="relative h-80 hidden md:block">
-              {/* Card 1: 250k Students */}
-              <div className="absolute top-0 right-0 bg-white rounded-xl p-4 shadow-lg w-48">
+            {/* Right Floating Cards - Diagonal Arrangement */}
+            <div className="relative h-96 hidden md:block">
+              {/* Card 1: 250k Students - Top Right */}
+              <div className="absolute top-0 right-0 bg-white rounded-xl p-5 shadow-xl w-52 transform hover:scale-105 transition-transform">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-lg">📚</div>
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-xl">📚</div>
                   <div>
-                    <p className="text-xs text-gray-600">250k</p>
+                    <p className="text-xs text-gray-600 font-medium">250k</p>
                     <p className="text-sm font-semibold text-gray-900">Assisted Students</p>
                   </div>
                 </div>
               </div>
 
-              {/* Card 2: Congratulations */}
-              <div className="absolute top-24 right-24 bg-white rounded-xl p-4 shadow-lg w-48">
+              {/* Card 2: Congratulations - Middle Diagonal */}
+              <div className="absolute top-1/3 right-1/4 bg-white rounded-xl p-5 shadow-xl w-56 transform hover:scale-105 transition-transform">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-lg">🎉</div>
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-xl">🎉</div>
                   <div>
-                    <p className="text-xs text-gray-600">Congratulations</p>
+                    <p className="text-xs text-gray-600 font-medium">Congratulations</p>
                     <p className="text-sm font-semibold text-gray-900">Your Custom Roadmap is Ready</p>
                   </div>
                 </div>
               </div>
 
-              {/* Card 3: AI Driven */}
-              <div className="absolute bottom-0 left-0 bg-white rounded-xl p-4 shadow-lg w-56">
-                <div className="flex items-center gap-3 mb-2">
-                  <img src="/placeholder.svg" alt="AI" className="w-8 h-8 rounded-full bg-gray-200" />
+              {/* Card 3: AI Driven - Bottom Left */}
+              <div className="absolute bottom-0 left-0 bg-white rounded-xl p-5 shadow-xl w-60 transform hover:scale-105 transition-transform">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">AI</span>
+                  </div>
                   <div>
-                    <p className="text-xs text-gray-600">AI Driven</p>
+                    <p className="text-xs text-gray-600 font-medium">AI Driven</p>
                     <p className="text-sm font-semibold text-gray-900">Latest AI Models</p>
                   </div>
                 </div>
-                <button className="mt-3 px-4 py-2 bg-pink-500 text-white rounded-full text-sm font-medium hover:bg-pink-600 w-full">
+                <button className="mt-2 px-5 py-2.5 bg-pink-500 text-white rounded-full text-sm font-medium hover:bg-pink-600 w-full transition-colors shadow-md">
                   Join Now
                 </button>
               </div>
