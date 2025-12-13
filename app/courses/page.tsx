@@ -5,6 +5,8 @@ import { Footer } from "@/components/footer"
 import Link from "next/link"
 import { ChevronRight, ChevronLeft, Plus, Loader2, Search } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import { useAuth } from "@/lib/auth-context"
+import { toast } from "sonner"
 import type { CourseRoadmapResponse } from "@/ai/fullCourseGenerator"
 
 export default function CoursesPage() {
@@ -21,29 +23,47 @@ export default function CoursesPage() {
     { id: 11, title: "Multivariable Calculus", image: "/classroom-students-learning.jpg" },
   ]
 
+  const { user, isAuthenticated } = useAuth()
   const [activeTab, setActiveTab] = useState<"all" | "my">("all")
   const [searchTerm, setSearchTerm] = useState("")
-  const [myCourses, setMyCourses] = useState<Array<{ title: string; image?: string; data: CourseRoadmapResponse; generatedAt: string }>>([])
+  const [myCourses, setMyCourses] = useState<Array<{ id: string; title: string; image?: string; data: CourseRoadmapResponse; generatedAt: string }>>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatingCourseName, setGeneratingCourseName] = useState<string | null>(null)
+  const [loadingCourses, setLoadingCourses] = useState(false)
+  const [generationMode, setGenerationMode] = useState<'select' | 'general' | 'custom' | null>(null)
+  const [selectedCourseForGeneration, setSelectedCourseForGeneration] = useState<string | null>(null)
 
-  // Load saved courses from localStorage
+  // Load saved courses from Supabase when user is authenticated
   useEffect(() => {
-    if (typeof window === "undefined") return
-    try {
-      const saved = localStorage.getItem("myCourses")
-      if (saved) {
-        setMyCourses(JSON.parse(saved))
-      }
-    } catch (e) {
-      console.error("Failed to load saved courses", e)
+    if (isAuthenticated && user) {
+      loadUserCourses()
+    } else {
+      setMyCourses([])
     }
-  }, [])
+  }, [isAuthenticated, user])
 
-  const persistMyCourses = (courses: typeof myCourses) => {
-    setMyCourses(courses)
-    if (typeof window !== "undefined") {
-      localStorage.setItem("myCourses", JSON.stringify(courses))
+  const loadUserCourses = async () => {
+    if (!user) return
+    setLoadingCourses(true)
+    try {
+      const response = await fetch(`/api/user-courses?username=${encodeURIComponent(user.username)}`)
+      if (!response.ok) {
+        throw new Error("Failed to load courses")
+      }
+      const result = await response.json()
+      const formattedCourses = result.courses.map((c: any) => ({
+        id: c.id,
+        title: c.course_name,
+        image: c.image,
+        data: c.course_data,
+        generatedAt: c.created_at,
+      }))
+      setMyCourses(formattedCourses)
+    } catch (error) {
+      console.error("Failed to load user courses", error)
+      toast.error("Failed to load your courses")
+    } finally {
+      setLoadingCourses(false)
     }
   }
 
@@ -57,9 +77,36 @@ export default function CoursesPage() {
     return myCourses.filter((c) => c.title.toLowerCase().includes(term))
   }, [myCourses, searchTerm])
 
-  const handleGenerate = async (courseName: string) => {
+  const handleGenerateMode = (courseName: string, mode: 'general' | 'custom') => {
+    if (!isAuthenticated || !user) {
+      toast.error("Please sign in to generate courses")
+      setTimeout(() => {
+        window.location.href = "/login"
+      }, 1500)
+      return
+    }
+
+    if (mode === 'custom') {
+      // For custom, we'll need to create a temporary course entry or use a special route
+      // For now, redirect to a custom course generation page
+      // We'll create a special route for this
+      toast.info("Redirecting to custom course generator...")
+      // Store the course name in sessionStorage for the custom page
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('customCourseName', courseName)
+        window.location.href = `/courses/custom`
+      }
+      return
+    }
+
+    // General course generation
+    handleGenerateGeneral(courseName)
+  }
+
+  const handleGenerateGeneral = async (courseName: string) => {
     setIsGenerating(true)
     setGeneratingCourseName(courseName)
+    setGenerationMode('general')
     try {
       const response = await fetch("/api/generate-full-course", {
         method: "POST",
@@ -97,18 +144,29 @@ export default function CoursesPage() {
         throw new Error("Generation completed without course data")
       }
 
-      const newEntry = {
-        title: courseName,
-        image: "/placeholder.jpg",
-        data: finalCourse,
-        generatedAt: new Date().toISOString(),
+      // Save to Supabase
+      const saveResponse = await fetch("/api/user-courses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: user.username,
+          courseName,
+          courseData: finalCourse,
+          image: "/placeholder.jpg",
+        }),
+      })
+
+      if (!saveResponse.ok) {
+        throw new Error("Failed to save course")
       }
-      persistMyCourses([newEntry, ...myCourses])
+
+      toast.success("Course generated and saved!")
+      await loadUserCourses() // Reload courses
       setActiveTab("my")
       setSearchTerm("") // reset search
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Failed to generate course"
-      alert(msg)
+      toast.error(msg)
     } finally {
       setIsGenerating(false)
       setGeneratingCourseName(null)
@@ -199,23 +257,54 @@ export default function CoursesPage() {
                     </p>
                   )}
                 </div>
-                <button
-                  onClick={() => handleGenerate(searchTerm || "Untitled Course")}
-                  disabled={!searchTerm || isGenerating}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-500"
-                >
-                  {isGenerating && generatingCourseName === searchTerm ? (
-                    <>
-                      <Loader2 className="animate-spin" size={16} />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
+                {generationMode === 'select' && selectedCourseForGeneration === searchTerm ? (
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => handleGenerateMode(searchTerm || "Untitled Course", 'general')}
+                      disabled={isGenerating}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-500"
+                    >
                       <Plus size={16} />
-                      Generate this course
-                    </>
-                  )}
-                </button>
+                      Generate General Course
+                    </button>
+                    <button
+                      onClick={() => handleGenerateMode(searchTerm || "Untitled Course", 'custom')}
+                      disabled={isGenerating}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-full font-medium hover:bg-teal-700 disabled:bg-gray-200 disabled:text-gray-500"
+                    >
+                      <Plus size={16} />
+                      Generate Custom Course
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        toast.error("Please sign in to generate courses")
+                        setTimeout(() => {
+                          window.location.href = "/login"
+                        }, 1500)
+                      } else {
+                        setGenerationMode('select')
+                        setSelectedCourseForGeneration(searchTerm || "Untitled Course")
+                      }
+                    }}
+                    disabled={!searchTerm || isGenerating}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-500"
+                  >
+                    {isGenerating && generatingCourseName === searchTerm ? (
+                      <>
+                        <Loader2 className="animate-spin" size={16} />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={16} />
+                        Generate this course
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -223,40 +312,40 @@ export default function CoursesPage() {
 
         {activeTab === "my" && (
           <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {filteredMyCourses.length > 0 ? (
-              filteredMyCourses.map((course, idx) => (
-                <div key={idx} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200">
-                  <div className="aspect-square bg-gray-200 relative overflow-hidden">
-                    <img
-                      src={course.image || "/placeholder.svg"}
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                    />
+            {!isAuthenticated ? (
+              <div className="col-span-3 bg-white border-2 border-gray-200 rounded-2xl p-6 text-center">
+                <p className="font-semibold text-gray-900 mb-2">Please sign in to view your courses</p>
+                <p className="text-sm text-gray-600 mb-4">Sign in to generate and save courses</p>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 px-6 py-2 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600"
+                >
+                  Sign In
+                </Link>
+              </div>
+            ) : loadingCourses ? (
+              <div className="col-span-3 bg-white border-2 border-gray-200 rounded-2xl p-6 text-center">
+                <Loader2 className="animate-spin mx-auto mb-2 text-teal-500" size={24} />
+                <p className="text-sm text-gray-600">Loading your courses...</p>
+              </div>
+            ) : filteredMyCourses.length > 0 ? (
+              filteredMyCourses.map((course) => (
+                <Link key={course.id} href={`/courses/my/${encodeURIComponent(course.title)}`} className="group">
+                  <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <div className="aspect-square bg-gray-200 relative overflow-hidden">
+                      <img
+                        src={course.image || "/placeholder.svg"}
+                        alt={course.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-gray-900 mb-2 text-sm">{course.title}</h3>
+                      <p className="text-xs text-gray-600 mb-2">Chapters: {course.data.roadmap.chapters.length}</p>
+                      <p className="text-xs text-gray-500">Saved: {new Date(course.generatedAt).toLocaleDateString()}</p>
+                    </div>
                   </div>
-                  <div className="p-4 space-y-2">
-                    <h3 className="font-semibold text-gray-900 text-sm">{course.title}</h3>
-                    <p className="text-xs text-gray-500">Chapters: {course.data.roadmap.chapters.length}</p>
-                    <p className="text-xs text-gray-500">Saved: {new Date(course.generatedAt).toLocaleString()}</p>
-                    <details className="border rounded-lg p-3 text-sm text-gray-700">
-                      <summary className="font-medium cursor-pointer">View roadmap & resources</summary>
-                      <div className="mt-3 space-y-2">
-                        <p className="font-semibold">Roadmap</p>
-                        <ul className="list-disc list-inside space-y-1">
-                          {course.data.roadmap.chapters.map((ch) => (
-                            <li key={ch.chapterNumber}>{ch.chapterNumber}. {ch.title}</li>
-                          ))}
-                        </ul>
-                        <p className="font-semibold mt-3">Resources</p>
-                        {course.data.resources.map((res, rIdx) => (
-                          <div key={rIdx} className="border rounded p-2 mb-2">
-                            <p className="font-semibold text-xs mb-1">{res.chapterTitle}</p>
-                            <p className="text-xs text-gray-600">Textbooks: {res.textbooks.length} | Videos: {res.freeVideosOrLectures.length} | Articles: {res.articlesOrDocs.length}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </details>
-                  </div>
-                </div>
+                </Link>
               ))
             ) : (
               <div className="col-span-3 bg-white border-2 border-gray-200 rounded-2xl p-6 flex items-center justify-between">

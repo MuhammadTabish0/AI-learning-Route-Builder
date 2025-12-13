@@ -1,40 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateQuestions } from '@/ai/questionGenerator';
+import { loadPromptTemplate, replaceTemplateVariables } from '@/lib/prompt-loader';
+import { callLLM, parseJSONResponse } from '@/lib/llm-client';
 
 /**
  * POST /api/generate-questions
- * Generates practice questions for a chapter
+ * Generates diagnostic questions for custom course generation
  * 
  * Request body:
  * {
- *   "subject": "Linear Algebra",
- *   "chapter": "Determinants"
+ *   "courseName": "Linear Algebra"
  * }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { subject, chapter } = body;
+    const { courseName } = body;
 
-    // Validate input
-    if (!subject || typeof subject !== 'string' || subject.trim().length === 0) {
+    if (!courseName || typeof courseName !== 'string' || courseName.trim().length === 0) {
       return NextResponse.json(
-        { error: 'Subject name is required and must be a non-empty string' },
+        { error: 'Course name is required' },
         { status: 400 }
       );
     }
 
-    if (!chapter || typeof chapter !== 'string' || chapter.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Chapter name is required and must be a non-empty string' },
-        { status: 400 }
-      );
+    // Load the questions prompt template
+    const promptTemplate = await loadPromptTemplate('custom-course-questions');
+    const prompt = replaceTemplateVariables(promptTemplate, {
+      COURSE_NAME: courseName.trim(),
+    });
+
+    // Call LLM to generate questions
+    const response = await callLLM(prompt, 'gemini-2.5-flash');
+    
+    // Parse JSON response
+    const questionsData = parseJSONResponse(response);
+
+    // Validate structure
+    if (!questionsData.questions || !Array.isArray(questionsData.questions)) {
+      throw new Error('Invalid response format: missing questions array');
     }
 
-    // Generate questions
-    const questions = await generateQuestions(subject.trim(), chapter.trim());
+    // Validate each question
+    for (const q of questionsData.questions) {
+      if (!q.questionId || !q.question || !q.type || !q.options || !Array.isArray(q.options)) {
+        throw new Error('Invalid question format');
+      }
+      if (q.type !== 'single' && q.type !== 'multiple') {
+        throw new Error(`Invalid question type: ${q.type}`);
+      }
+    }
 
-    return NextResponse.json(questions, { status: 200 });
+    return NextResponse.json({
+      success: true,
+      questions: questionsData.questions,
+    });
   } catch (error) {
     console.error('Error generating questions:', error);
     
@@ -51,4 +70,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

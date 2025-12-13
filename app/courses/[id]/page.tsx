@@ -5,6 +5,8 @@ import { Footer } from "@/components/footer"
 import { useEffect, useState, use } from "react"
 import { Loader2, BookOpen, FileText, Book, Video, Link as LinkIcon } from "lucide-react"
 import { toast } from "sonner"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
 import type { CourseRoadmapResponse } from "@/ai/fullCourseGenerator"
 
 // Course mapping - maps course ID to course name
@@ -23,24 +25,186 @@ const courseMap: Record<string, string> = {
 
 export default function CoursePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
+  const { user, isAuthenticated } = useAuth()
+  const router = useRouter()
   const [courseData, setCourseData] = useState<CourseRoadmapResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState<'roadmap' | 'resources'>('roadmap')
+  const [generationMode, setGenerationMode] = useState<'select' | 'general' | 'custom' | 'questions' | 'generating'>('select')
+  const [questions, setQuestions] = useState<Array<{questionId: number; question: string; type: 'single' | 'multiple'; options: string[]}>>([])
+  const [answers, setAnswers] = useState<Record<number, string | string[]>>({})
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   
   const courseName = courseMap[resolvedParams.id]
   const isGeneratableCourse = courseName !== undefined
 
   useEffect(() => {
-    if (isGeneratableCourse && !courseData) {
-      generateCourse()
-    }
+    // Don't auto-generate, wait for user to choose mode
   }, [resolvedParams.id])
+
+  const fetchQuestions = async () => {
+    if (!courseName) return
+    
+    // Check authentication for custom course
+    if (!isAuthenticated || !user) {
+      toast.error("Please sign in to generate custom courses")
+      setTimeout(() => {
+        router.push("/login")
+      }, 1500)
+      return
+    }
+    
+    setLoading(true)
+    setGenerationMode('questions')
+    try {
+      const response = await fetch('/api/generate-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseName }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate questions: ${response.status}`)
+      }
+
+      const result = await response.json()
+      setQuestions(result.questions)
+      setCurrentQuestionIndex(0)
+      setAnswers({})
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate questions'
+      toast.error(errorMessage)
+      setGenerationMode('select')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAnswer = (questionId: number, answer: string) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: answer,
+    }))
+  }
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1)
+    } else {
+      // All questions answered, generate custom course
+      generateCustomCourse()
+    }
+  }
+
+  const generateCustomCourse = async () => {
+    if (!courseName) return
+
+    setLoading(true)
+    setGenerationMode('generating')
+    try {
+      const response = await fetch('/api/generate-custom-course', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseName, responses: answers }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate course: ${response.status} ${response.statusText}`)
+      }
+
+      // Handle Server-Sent Events stream
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+
+      if (!reader) {
+        throw new Error('No response body')
+      }
+
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || '' // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6))
+              
+              if (data.type === 'progress') {
+                // Show progress message
+                if (data.message) {
+                  toast.info(data.message)
+                }
+              } else if (data.type === 'complete') {
+                // Final complete course
+                setCourseData(data.data)
+                setSelectedChapter(0) // Select first chapter by default
+                setGenerationMode('select')
+                
+                // Save custom course to Supabase if user is authenticated
+                if (isAuthenticated && user) {
+                  try {
+                    const saveResponse = await fetch("/api/user-courses", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        username: user.username,
+                        courseName,
+                        courseData: data.data,
+                        image: "/placeholder.jpg",
+                      }),
+                    })
+
+                    if (saveResponse.ok) {
+                      toast.success(`Personalized course "${courseName}" generated and saved to My Courses!`)
+                    } else {
+                      console.error('Failed to save custom course')
+                      toast.success(`Personalized course "${courseName}" generated successfully!`)
+                    }
+                  } catch (saveError) {
+                    console.error('Error saving custom course:', saveError)
+                    toast.success(`Personalized course "${courseName}" generated successfully!`)
+                  }
+                } else {
+                  toast.success(`Personalized course "${courseName}" generated successfully!`)
+                }
+              } else if (data.type === 'error') {
+                throw new Error(data.error)
+              }
+            } catch (parseError) {
+              console.error('Error parsing SSE data:', parseError)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      let errorMessage = 'Failed to generate custom course'
+      
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        errorMessage = 'Network error: Could not connect to server.'
+      } else if (error instanceof Error) {
+        errorMessage = error.message
+      }
+      
+      toast.error(errorMessage)
+      setGenerationMode('select')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const generateCourse = async () => {
     if (!courseName) return
 
     setLoading(true)
+    setGenerationMode('generating')
     try {
       const response = await fetch('/api/generate-full-course', {
         method: 'POST',
@@ -96,6 +260,7 @@ export default function CoursePage({ params }: { params: Promise<{ id: string }>
                 // Final complete course
                 setCourseData(data.data)
                 setSelectedChapter(0) // Select first chapter by default
+                setGenerationMode('select')
                 if (data.cached) {
                   toast.success(`Course "${courseName}" loaded from cache!`)
                 } else {
@@ -120,7 +285,7 @@ export default function CoursePage({ params }: { params: Promise<{ id: string }>
       }
       
       toast.error(errorMessage)
-      console.error('Error generating course:', error)
+      setGenerationMode('select')
     } finally {
       setLoading(false)
     }
@@ -151,24 +316,35 @@ export default function CoursePage({ params }: { params: Promise<{ id: string }>
                   : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempore incididunt ut labore et dolore tempor sint'
                 }
               </p>
-              {isGeneratableCourse && !courseData && (
-                <button
-                  onClick={generateCourse}
-                  disabled={loading}
-                  className="inline-flex items-center gap-2 px-8 py-3 bg-white text-teal-500 rounded-full font-medium hover:bg-teal-50 disabled:bg-teal-200 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="animate-spin" size={20} />
-                      Generating Course...
-                    </>
-                  ) : (
-                    <>
-                      <BookOpen size={20} />
-                      Generate Course Content
-                    </>
-                  )}
-                </button>
+              {isGeneratableCourse && !courseData && generationMode === 'select' && (
+                <div className="flex flex-col gap-4">
+                  <button
+                    onClick={() => {
+                      setGenerationMode('general')
+                      generateCourse()
+                    }}
+                    disabled={loading}
+                    className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-teal-500 rounded-full font-medium hover:bg-teal-50 disabled:bg-teal-200 disabled:cursor-not-allowed"
+                  >
+                    <BookOpen size={20} />
+                    Generate General Course
+                  </button>
+                  <button
+                    onClick={fetchQuestions}
+                    disabled={loading}
+                    className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-teal-600 text-white rounded-full font-medium hover:bg-teal-700 disabled:bg-teal-300 disabled:cursor-not-allowed"
+                  >
+                    <BookOpen size={20} />
+                    Generate Custom Course
+                  </button>
+                </div>
+              )}
+              
+              {isGeneratableCourse && generationMode === 'generating' && (
+                <div className="inline-flex items-center gap-2 px-8 py-3 bg-white text-teal-500 rounded-full font-medium">
+                  <Loader2 className="animate-spin" size={20} />
+                  Generating Course...
+                </div>
               )}
             </div>
             <div className="bg-gray-200 rounded-3xl h-96 flex items-center justify-center">
@@ -181,6 +357,89 @@ export default function CoursePage({ params }: { params: Promise<{ id: string }>
           </div>
         </div>
       </section>
+
+      {/* Questions Section */}
+      {isGeneratableCourse && generationMode === 'questions' && questions.length > 0 && (
+        <section className="max-w-3xl mx-auto px-4 py-12">
+          <div className="bg-white border-2 border-gray-200 rounded-2xl p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Customize Your Course
+              </h2>
+              <p className="text-gray-600">
+                Question {currentQuestionIndex + 1} of {questions.length}
+              </p>
+            </div>
+
+            {questions[currentQuestionIndex] && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    {questions[currentQuestionIndex].question}
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    {questions[currentQuestionIndex].options.map((option, idx) => {
+                      const questionId = questions[currentQuestionIndex].questionId
+                      const isSelected = answers[questionId] === option
+                      
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => handleAnswer(questionId, option)}
+                          className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
+                            isSelected
+                              ? 'border-teal-500 bg-teal-50 text-teal-900'
+                              : 'border-gray-200 hover:border-teal-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              isSelected
+                                ? 'border-teal-500 bg-teal-500'
+                                : 'border-gray-300'
+                            }`}>
+                              {isSelected && (
+                                <div className="w-2 h-2 rounded-full bg-white" />
+                              )}
+                            </div>
+                            <span className="text-gray-900">{option}</span>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex justify-between pt-4">
+                  <button
+                    onClick={() => {
+                      if (currentQuestionIndex > 0) {
+                        setCurrentQuestionIndex(prev => prev - 1)
+                      } else {
+                        setGenerationMode('select')
+                        setQuestions([])
+                        setAnswers({})
+                      }
+                    }}
+                    className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50"
+                  >
+                    {currentQuestionIndex > 0 ? 'Previous' : 'Cancel'}
+                  </button>
+                  
+                  <button
+                    onClick={handleNextQuestion}
+                    disabled={!answers[questions[currentQuestionIndex].questionId]}
+                    className="px-6 py-2 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  >
+                    {currentQuestionIndex < questions.length - 1 ? 'Next' : 'Generate Course'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Course Content */}
       {courseData && (

@@ -62,6 +62,13 @@ export default function LoginPage() {
 
       toast.success("Login successful! Welcome back!")
       
+      // Store user data in localStorage for auth context
+      if (result.data) {
+        localStorage.setItem('currentUser', JSON.stringify(result.data))
+        // Trigger auth context update
+        window.dispatchEvent(new Event('auth-update'))
+      }
+      
       // Reset form after successful submission
       reset()
       
