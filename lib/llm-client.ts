@@ -13,13 +13,25 @@ if (typeof process !== 'undefined' && process.env) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 /**
- * Calls the Gemini API with a prompt and returns the response
- * @param prompt - The prompt to send to the LLM
- * @param model - The model to use (default: gemini-1.5-flash for cost efficiency)
- * @returns Promise<string> - The raw response from the LLM
- */
-/**
- * Retry function with exponential backoff
+ * Retry function with exponential backoff.
+ *
+ * **Specification (internal helper)**:
+ *
+ * Requires:
+ * - `fn` is an async function that may throw on transient failures.
+ * - `maxRetries` is a positive integer (default 3).
+ * - `baseDelay` is a positive integer number of milliseconds (default 1000).
+ *
+ * Effects:
+ * - Calls `fn` up to `maxRetries` times until it resolves successfully.
+ * - On errors that look like rate limiting (HTTP 429 / quota / rate text),
+ *   waits with exponential backoff (or a server-suggested delay) before retrying,
+ *   unless this was the last allowed attempt.
+ * - If all attempts fail, rethrows the last error or throws a generic
+ *   "Max retries exceeded" error.
+ *
+ * This function does not mutate external state; its only observable effects are
+ * timing (delays) and any side effects performed inside `fn` itself.
  */
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
@@ -56,6 +68,34 @@ async function retryWithBackoff<T>(
   throw new Error('Max retries exceeded');
 }
 
+/**
+ * Calls the Gemini LLM with a prompt and returns the raw JSON string response.
+ *
+ * **Specification**:
+ *
+ * Requires:
+ * - `process.env.GEMINI_API_KEY` is defined; otherwise this function throws.
+ * - `prompt` is a non-empty string containing the user/system instructions.
+ * - `model` is a valid Gemini model identifier (default `'gemini-1.5-flash'`).
+ *
+ * Effects:
+ * - Uses the shared `genAI` client to call the specified Gemini model.
+ * - Wraps the given `prompt` with a fixed system instruction that instructs
+ *   the model to respond with **valid JSON only**.
+ * - Uses streaming first, then falls back to non‑streaming if needed.
+ * - Returns a `Promise` that resolves to the raw string content from the LLM.
+ * - Throws an `Error` (wrapped with a helpful message) if:
+ *   - the API key is missing,
+ *   - the LLM request fails, or
+ *   - no non‑empty content is produced.
+ *
+ * This function does not persist or cache responses; callers are responsible
+ * for parsing the returned JSON (e.g., via `parseJSONResponse`).
+ *
+ * @param prompt - The prompt to send to the LLM.
+ * @param model - The model to use (default: `'gemini-1.5-flash'`).
+ * @returns Raw string response from the LLM.
+ */
 export async function callLLM(
   prompt: string,
   model: string = 'gemini-1.5-flash'
@@ -119,9 +159,30 @@ ${prompt}`;
 }
 
 /**
- * Parses JSON response from LLM, handling potential markdown code blocks
- * @param response - The raw response from the LLM
- * @returns Parsed JSON object
+ * Parses JSON response from the LLM, handling potential markdown code blocks.
+ *
+ * **Specification**:
+ *
+ * Requires:
+ * - `response` is a string that is expected to contain a JSON value, optionally
+ *   wrapped in a markdown code block with ``` or ```json fences.
+ *
+ * Effects:
+ * - Strips leading/trailing markdown fences if present.
+ * - Logs warnings if the JSON text appears structurally incomplete
+ *   (unbalanced braces/brackets).
+ * - Attempts to `JSON.parse` the cleaned string and returns the resulting value
+ *   as type `T`.
+ * - If parsing fails, logs detailed diagnostics and throws an `Error` whose
+ *   message describes the parse error and includes a preview of the response.
+ * - If the response appears truncated (very long, no closing brace/bracket),
+ *   throws an `Error` that explicitly mentions truncation.
+ *
+ * This function does not mutate its input string or external state; it only
+ * performs logging and throws on failure.
+ *
+ * @param response - The raw response from the LLM.
+ * @returns Parsed JSON value of type `T`.
  */
 export function parseJSONResponse<T>(response: string): T {
   try {
