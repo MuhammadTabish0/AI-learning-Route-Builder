@@ -11,7 +11,7 @@ import type { CourseRoadmapResponse } from "@/ai/fullCourseGenerator"
 
 export default function MyCoursePage({ params }: { params: Promise<{ courseName: string }> }) {
   const resolvedParams = use(params)
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, initialized } = useAuth()
   const router = useRouter()
   const [courseData, setCourseData] = useState<CourseRoadmapResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -21,6 +21,8 @@ export default function MyCoursePage({ params }: { params: Promise<{ courseName:
   const courseName = decodeURIComponent(resolvedParams.courseName)
 
   useEffect(() => {
+    if (!initialized) return
+
     if (!isAuthenticated || !user) {
       toast.error("Please sign in to view your courses")
       router.push("/login")
@@ -28,7 +30,7 @@ export default function MyCoursePage({ params }: { params: Promise<{ courseName:
     }
 
     loadCourse()
-  }, [resolvedParams.courseName, user])
+  }, [initialized, resolvedParams.courseName, user])
 
   const loadCourse = async () => {
     if (!user) return
@@ -63,7 +65,7 @@ export default function MyCoursePage({ params }: { params: Promise<{ courseName:
     ? courseData.resources[selectedChapter]
     : null
 
-  if (!isAuthenticated || loading) {
+  if (!initialized || !isAuthenticated || loading) {
     return (
       <main className="min-h-screen bg-white">
         <Navbar />
@@ -217,14 +219,16 @@ export default function MyCoursePage({ params }: { params: Promise<{ courseName:
                 )}
 
                 {/* Videos */}
-                {currentChapterResources.freeVideosOrLectures.length > 0 && (
+                {currentChapterResources.freeVideosOrLectures.filter((v) => v.url && v.url.startsWith("http")).length > 0 && (
                   <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
                     <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                       <Video className="text-teal-500" size={28} />
                       Free Videos & Lectures
                     </h3>
                     <div className="space-y-4">
-                      {currentChapterResources.freeVideosOrLectures.map((video, idx) => (
+                    {currentChapterResources.freeVideosOrLectures
+                      .filter((video) => video.url && video.url.startsWith("http"))
+                      .map((video, idx) => (
                         <div key={idx} className="bg-gray-50 rounded-lg p-6">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -239,6 +243,11 @@ export default function MyCoursePage({ params }: { params: Promise<{ courseName:
                                 <LinkIcon size={16} />
                                 {video.url.startsWith('http') ? 'Watch Video' : video.url}
                               </a>
+                              {video.description && (
+                                <p className="text-xs text-gray-600 mt-2">
+                                  {video.description}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -248,14 +257,16 @@ export default function MyCoursePage({ params }: { params: Promise<{ courseName:
                 )}
 
                 {/* Articles */}
-                {currentChapterResources.articlesOrDocs.length > 0 && (
+                {currentChapterResources.articlesOrDocs.filter((a) => a.url && a.url.startsWith("http")).length > 0 && (
                   <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
                     <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                       <FileText className="text-teal-500" size={28} />
                       Articles & Documentation
                     </h3>
                     <div className="space-y-4">
-                      {currentChapterResources.articlesOrDocs.map((article, idx) => (
+                    {currentChapterResources.articlesOrDocs
+                      .filter((article) => article.url && article.url.startsWith("http"))
+                      .map((article, idx) => (
                         <div key={idx} className="bg-gray-50 rounded-lg p-6">
                           <a
                             href={article.url}
@@ -266,6 +277,11 @@ export default function MyCoursePage({ params }: { params: Promise<{ courseName:
                             <LinkIcon size={18} />
                             {article.title}
                           </a>
+                          {article.description && (
+                            <p className="text-xs text-gray-600 mt-2">
+                              {article.description}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>

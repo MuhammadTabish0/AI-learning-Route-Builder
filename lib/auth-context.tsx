@@ -12,6 +12,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
+  initialized: boolean
   login: (userData: User) => void
   logout: () => void
   checkAuth: () => void
@@ -21,10 +22,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
     // Check if user is logged in from localStorage
     checkAuth()
+    setInitialized(true)
 
     // Listen for storage changes (when login happens in another tab/window)
     const handleStorageChange = () => {
@@ -72,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isAuthenticated: !!user,
+        initialized,
         login,
         logout,
         checkAuth,

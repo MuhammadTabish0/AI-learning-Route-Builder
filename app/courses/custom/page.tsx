@@ -11,7 +11,7 @@ import type { CourseRoadmapResponse } from "@/ai/fullCourseGenerator"
 
 export default function CustomCoursePage() {
   const router = useRouter()
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, initialized } = useAuth()
   const [courseName, setCourseName] = useState<string>("")
   const [questions, setQuestions] = useState<Array<{questionId: number; question: string; type: 'single' | 'multiple'; options: string[]}>>([])
   const [answers, setAnswers] = useState<Record<number, string | string[]>>({})
@@ -20,6 +20,11 @@ export default function CustomCoursePage() {
   const [courseData, setCourseData] = useState<CourseRoadmapResponse | null>(null)
 
   useEffect(() => {
+    // Wait until auth state has been initialized from storage
+    if (!initialized) {
+      return
+    }
+
     if (!isAuthenticated) {
       toast.error("Please sign in to generate custom courses")
       router.push("/login")
@@ -37,7 +42,7 @@ export default function CustomCoursePage() {
         router.push("/courses")
       }
     }
-  }, [isAuthenticated, router])
+  }, [initialized, isAuthenticated, router])
 
   const fetchQuestions = async (name: string) => {
     setLoading(true)
@@ -164,7 +169,7 @@ export default function CustomCoursePage() {
     }
   }
 
-  if (!isAuthenticated || !courseName) {
+  if (!initialized || !isAuthenticated || !courseName) {
     return null
   }
 

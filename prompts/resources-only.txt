@@ -17,13 +17,15 @@ Return ONLY a JSON object with this structure:
     {
       "source": "Platform name (e.g., YouTube, Khan Academy)",
       "topic": "Topic covered",
-      "url": "URL or search term"
+      "url": "URL or search term",
+      "description": "1–2 sentence explanation of how this video/lecture helps the student learn the topic."
     }
   ],
   "articlesOrDocs": [
     {
       "title": "Article/Resource Title",
-      "url": "URL or search term"
+      "url": "URL or search term",
+      "description": "1–2 sentence explanation of what this resource covers and why it is helpful."
     }
   ]
 }

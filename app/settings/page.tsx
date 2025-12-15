@@ -8,16 +8,18 @@ import { useEffect } from "react"
 import { User, Mail, BookOpen, CreditCard } from "lucide-react"
 
 export default function SettingsPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, initialized } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
+    if (!initialized) return
+
     if (!isAuthenticated) {
       router.push("/login")
     }
-  }, [isAuthenticated, router])
+  }, [initialized, isAuthenticated, router])
 
-  if (!isAuthenticated || !user) {
+  if (!initialized || !isAuthenticated || !user) {
     return null
   }
 

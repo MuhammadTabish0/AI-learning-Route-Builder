@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadPromptTemplate, replaceTemplateVariables } from '@/lib/prompt-loader';
 import { callLLM, parseJSONResponse } from '@/lib/llm-client';
-import { CourseRoadmapResponse } from '@/ai/fullCourseGenerator';
+import { CourseRoadmapResponse, validateCourseLinks, augmentCourseWithExternalResources } from '@/ai/fullCourseGenerator';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
@@ -79,6 +79,22 @@ export async function POST(request: NextRequest) {
             throw new Error('Invalid course structure in response');
           }
 
+          // Validate external links so students mostly see working URLs
+          send({
+            type: 'progress',
+            section: 'validating',
+            message: 'Validating resource links...',
+          });
+          const validatedCourseData = await validateCourseLinks(courseData);
+
+          // Augment with real links via Apify (MIT OCW, Khan Academy, YouTube)
+          send({
+            type: 'progress',
+            section: 'augmenting',
+            message: 'Augmenting resources with external links...',
+          });
+          const augmentedCourseData = await augmentCourseWithExternalResources(courseName.trim(), validatedCourseData);
+
           // Save to cache
           try {
             const dataDir = join(process.cwd(), 'data', 'courses');
@@ -92,7 +108,7 @@ export async function POST(request: NextRequest) {
             await writeFile(
               dataFilePath,
               JSON.stringify({
-                ...courseData,
+                ...augmentedCourseData,
                 metadata: {
                   generatedAt: new Date().toISOString(),
                   isCustom: true,
@@ -106,10 +122,10 @@ export async function POST(request: NextRequest) {
             // Continue even if save fails
           }
 
-          // Send final complete course
+          // Send final complete course (with validated + augmented links)
           send({
             type: 'complete',
-            data: courseData,
+            data: augmentedCourseData,
           });
 
           controller.close();

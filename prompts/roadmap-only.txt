@@ -56,10 +56,19 @@ Format:
          { "title": "...", "author": "...", "edition": "...", "whyUseful": "..." }
       ],
       "freeVideosOrLectures": [
-         { "source": "...", "topic": "...", "url": "..." }
+         {
+           "source": "...",
+           "topic": "...",
+           "url": "...",
+           "description": "1–2 sentence explanation of how this video/lecture helps the student learn this chapter."
+         }
       ],
       "articlesOrDocs": [
-         { "title": "...", "url": "..." }
+         {
+           "title": "...",
+           "url": "...",
+           "description": "1–2 sentence explanation of what this resource covers and why it is helpful for this chapter."
+         }
       ]
    }
 ]
@@ -90,4 +99,5 @@ ADDITIONAL RULES
 - Keep chapter naming academically aligned and conventional.
 - Ensure all citations are real and verifiable.
 - Resource links must be accessible and legal.
+- For every video or article, include a short \"description\" field explaining how this resource helps the student for that specific chapter.
 - If only {{COURSE_NAME}} is provided, generate all chapters automatically.
