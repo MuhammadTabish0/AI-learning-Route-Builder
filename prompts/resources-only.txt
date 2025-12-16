@@ -1,6 +1,6 @@
 # Course Resources Generator
 
-Generate learning resources for the course "{{COURSE_NAME}}".
+Generate learning resources for the chapter "{{CHAPTER_TITLE}}" in the course "{{COURSE_NAME}}".
 
 Return ONLY a JSON object with this structure:
 

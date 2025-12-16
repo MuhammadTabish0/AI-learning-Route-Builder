@@ -113,7 +113,7 @@ export async function callLLM(
       generationConfig: {
         temperature: 0.7,
         responseMimeType: 'application/json',
-        maxOutputTokens: 16384, // Increase token limit for large course generation
+        maxOutputTokens: 32768, // Increased token limit for very large course generation
       },
     });
 

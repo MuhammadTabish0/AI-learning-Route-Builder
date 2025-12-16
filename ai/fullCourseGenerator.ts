@@ -507,6 +507,30 @@ export async function augmentCourseWithExternalResources(
  * @param onProgress - Optional callback for progress updates
  * @returns Promise<CourseRoadmapResponse> - Course roadmap with resources
  */
+/**
+ * Generates resources for a single chapter to avoid token limits
+ */
+async function generateResourcesForChapter(
+  courseName: string,
+  chapterTitle: string
+): Promise<ChapterResource> {
+  const resourcesTemplate = await loadPromptTemplate('resources-only');
+  const resourcesPrompt = replaceTemplateVariables(resourcesTemplate, {
+    COURSE_NAME: courseName,
+    CHAPTER_TITLE: chapterTitle,
+  });
+  
+  const response = await callLLM(resourcesPrompt, 'gemini-2.5-flash');
+  const resourcesData = parseJSONResponse<CourseResources>(response);
+  
+  return {
+    chapterTitle,
+    textbooks: resourcesData.textbooks || [],
+    freeVideosOrLectures: resourcesData.freeVideosOrLectures || [],
+    articlesOrDocs: resourcesData.articlesOrDocs || [],
+  };
+}
+
 export async function generateFullCourse(
   courseName: string,
   onProgress?: (section: string, data: Partial<CourseRoadmapResponse>) => void
@@ -514,27 +538,110 @@ export async function generateFullCourse(
   try {
     console.log(`Starting course roadmap generation for: ${courseName}`);
 
-    // Generate roadmap and resources in a single call
-    console.log('Generating roadmap and resources...');
-    const roadmapTemplate = await loadPromptTemplate('roadmap-only');
-    const roadmapPrompt = replaceTemplateVariables(roadmapTemplate, { COURSE_NAME: courseName });
-    const response = await callLLM(roadmapPrompt, 'gemini-2.5-flash');
-    const courseData = parseJSONResponse<CourseRoadmapResponse>(response);
+    // Try generating roadmap + resources together first (faster for smaller courses)
+    // If it fails due to truncation, fall back to chunked generation
+    let courseData: CourseRoadmapResponse;
+    
+    try {
+      console.log('Attempting to generate roadmap and resources together...');
+      const roadmapTemplate = await loadPromptTemplate('roadmap-only');
+      const roadmapPrompt = replaceTemplateVariables(roadmapTemplate, { COURSE_NAME: courseName });
+      const response = await callLLM(roadmapPrompt, 'gemini-2.5-flash');
+      courseData = parseJSONResponse<CourseRoadmapResponse>(response);
 
-    // Validate structure
-    if (!courseData.roadmap || !courseData.resources) {
-      throw new Error('Invalid course structure returned from LLM - missing roadmap or resources');
+      // Validate structure
+      if (!courseData.roadmap || !courseData.resources) {
+        throw new Error('Invalid course structure returned from LLM - missing roadmap or resources');
+      }
+
+      if (!courseData.roadmap.course || !Array.isArray(courseData.roadmap.chapters)) {
+        throw new Error('Invalid roadmap structure returned from LLM');
+      }
+
+      if (!Array.isArray(courseData.resources)) {
+        throw new Error('Invalid resources structure returned from LLM');
+      }
+
+      console.log(`Roadmap generated with ${courseData.roadmap.chapters.length} chapters and ${courseData.resources.length} resource sets`);
+    } catch (error) {
+      // If generation fails (likely due to truncation), use chunked approach
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('truncated') || errorMessage.includes('incomplete') || errorMessage.includes('parse')) {
+        console.log('Response was truncated, switching to chunked generation...');
+        
+        // Step 1: Generate roadmap only
+        console.log('Generating roadmap only...');
+        const roadmapOnlyPrompt = `You are an expert curriculum designer. Generate ONLY a course roadmap for {{COURSE_NAME}}.
+
+Return ONLY this JSON structure:
+{
+  "roadmap": {
+    "course": "{{COURSE_NAME}}",
+    "chapters": [
+      { "chapterNumber": 1, "title": "Chapter Title" },
+      { "chapterNumber": 2, "title": "Chapter Title" }
+    ]
+  }
+}
+
+Do not include resources. Only return the roadmap JSON.`;
+        
+        const roadmapPrompt = replaceTemplateVariables(roadmapOnlyPrompt, { COURSE_NAME: courseName });
+        const roadmapResponse = await callLLM(roadmapPrompt, 'gemini-2.5-flash');
+        const roadmapResult = parseJSONResponse<{ roadmap: CourseRoadmap }>(roadmapResponse);
+        const roadmapData = roadmapResult.roadmap;
+
+        if (!roadmapData.course || !Array.isArray(roadmapData.chapters)) {
+          throw new Error('Invalid roadmap structure returned from LLM');
+        }
+
+        console.log(`Roadmap generated with ${roadmapData.chapters.length} chapters`);
+        onProgress?.('roadmap', { roadmap: roadmapData });
+
+        // Step 2: Generate resources per chapter
+        console.log('Generating resources per chapter...');
+        const resources: ChapterResource[] = [];
+        
+        for (let i = 0; i < roadmapData.chapters.length; i++) {
+          const chapter = roadmapData.chapters[i];
+          console.log(`Generating resources for chapter ${i + 1}/${roadmapData.chapters.length}: ${chapter.title}`);
+          
+          try {
+            const chapterResources = await generateResourcesForChapter(courseName, chapter.title);
+            resources.push(chapterResources);
+            
+            // Small delay to avoid rate limits
+            if (i < roadmapData.chapters.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          } catch (error) {
+            console.warn(`Failed to generate resources for chapter "${chapter.title}":`, error);
+            // Add empty resources as fallback
+            resources.push({
+              chapterTitle: chapter.title,
+              textbooks: [],
+              freeVideosOrLectures: [],
+              articlesOrDocs: [],
+            });
+          }
+          
+          onProgress?.('resources', {
+            roadmap: roadmapData,
+            resources: resources,
+          });
+        }
+
+        courseData = {
+          roadmap: roadmapData,
+          resources,
+        };
+
+        console.log(`Resources generated for ${resources.length} chapters`);
+      } else {
+        // Re-throw if it's not a truncation error
+        throw error;
+      }
     }
-
-    if (!courseData.roadmap.course || !Array.isArray(courseData.roadmap.chapters)) {
-      throw new Error('Invalid roadmap structure returned from LLM');
-    }
-
-    if (!Array.isArray(courseData.resources)) {
-      throw new Error('Invalid resources structure returned from LLM');
-    }
-
-    console.log(`Roadmap generated with ${courseData.roadmap.chapters.length} chapters and ${courseData.resources.length} resource sets`);
 
     // Validate external links so students mostly see working URLs
     console.log('Validating external resource links...');
