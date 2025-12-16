@@ -73,12 +73,6 @@ export function Navbar() {
 
           {/* Right side buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <select className="text-sm text-gray-700 bg-transparent border-0 cursor-pointer flex items-center gap-1">
-              <option>English</option>
-              <option>Spanish</option>
-              <option>French</option>
-            </select>
-            
             {isAuthenticated && user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
