@@ -119,7 +119,78 @@ ${prompt}`;
 }
 
 /**
- * Parses JSON response from LLM, handling potential markdown code blocks
+ * Sanitizes JSON string by escaping control characters within string values
+ * This fixes issues where LLMs generate unescaped newlines, tabs, etc. in JSON strings
+ */
+function sanitizeJSON(jsonString: string): string {
+  let result = '';
+  let inString = false;
+  let escapeNext = false;
+  
+  for (let i = 0; i < jsonString.length; i++) {
+    const char = jsonString[i];
+    const charCode = char.charCodeAt(0);
+    
+    if (escapeNext) {
+      // We're escaping this character, add it as-is
+      result += char;
+      escapeNext = false;
+      continue;
+    }
+    
+    if (char === '\\') {
+      // Escape sequence, keep it and mark next char as escaped
+      result += char;
+      escapeNext = true;
+      continue;
+    }
+    
+    if (char === '"') {
+      // Toggle string state
+      inString = !inString;
+      result += char;
+      continue;
+    }
+    
+    if (inString) {
+      // We're inside a string value
+      // Control characters (0x00-0x1F) except already escaped ones need to be escaped
+      if (charCode >= 0x00 && charCode <= 0x1F) {
+        // Escape control characters
+        switch (char) {
+          case '\n':
+            result += '\\n';
+            break;
+          case '\r':
+            result += '\\r';
+            break;
+          case '\t':
+            result += '\\t';
+            break;
+          case '\b':
+            result += '\\b';
+            break;
+          case '\f':
+            result += '\\f';
+            break;
+          default:
+            // Escape other control characters as \uXXXX
+            result += `\\u${charCode.toString(16).padStart(4, '0')}`;
+        }
+      } else {
+        result += char;
+      }
+    } else {
+      // Outside string, add character as-is
+      result += char;
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Parses JSON response from LLM, handling potential markdown code blocks and control characters
  * @param response - The raw response from the LLM
  * @returns Parsed JSON object
  */
@@ -149,8 +220,22 @@ export function parseJSONResponse<T>(response: string): T {
       }
     }
 
-    // Try to parse the JSON
-    return JSON.parse(cleaned) as T;
+    // Try to parse the JSON directly first
+    try {
+      return JSON.parse(cleaned) as T;
+    } catch (parseError: any) {
+      // If parsing fails due to control characters, try sanitizing
+      if (parseError.message && (
+        parseError.message.includes('control character') ||
+        parseError.message.includes('Bad control character')
+      )) {
+        console.warn('Detected control characters in JSON, attempting to sanitize...');
+        const sanitized = sanitizeJSON(cleaned);
+        return JSON.parse(sanitized) as T;
+      }
+      // Re-throw if it's not a control character error
+      throw parseError;
+    }
   } catch (error) {
     // If parsing fails, try to find where the JSON breaks and provide better error
     const errorMessage = error instanceof Error ? error.message : String(error);
