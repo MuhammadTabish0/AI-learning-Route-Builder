@@ -359,32 +359,6 @@ export default function CoursesPage() {
         )}
 
 
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Choice favourite course from top category</h2>
-          <div className="flex gap-2">
-            <button className="p-2 rounded-full bg-teal-500 text-white hover:bg-teal-600">
-              <ChevronLeft size={20} />
-            </button>
-            <button className="p-2 rounded-full bg-teal-500 text-white hover:bg-teal-600">
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-4 gap-6">
-          {categories.map((category, idx) => (
-            <div
-              key={idx}
-              className={`${category.color} rounded-2xl p-8 text-center hover:shadow-md transition-shadow cursor-pointer`}
-            >
-              <div className="text-4xl mb-4">{category.icon}</div>
-              <h3 className="font-semibold text-gray-900">{category.name}</h3>
-              <p className="text-xs text-gray-600 mt-2">
-                Unlock your potential in {category.name.toLowerCase()} with comprehensive courses and hands-on learning
-              </p>
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* CTA Section */}
@@ -396,9 +370,12 @@ export default function CoursesPage() {
               SwiftEd brings personalized roadmaps, AI summaries, and quizzes to your screen – making online learning
               focused and engaging
             </p>
-            <button className="px-8 py-3 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600">
+            <Link
+              href="/signup"
+              className="inline-block px-8 py-3 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600"
+            >
               Start learning now
-            </button>
+            </Link>
           </div>
         </div>
       </section>

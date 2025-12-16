@@ -3,6 +3,7 @@
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Check } from "lucide-react"
+import Link from "next/link"
 
 export default function MembershipPage() {
   const plans = [
@@ -104,9 +105,12 @@ export default function MembershipPage() {
               SwiftEd brings personalized roadmaps, AI summaries, and quizzes to your screen – making online learning
               focused and engaging
             </p>
-            <button className="px-8 py-3 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600">
+            <Link
+              href="/signup"
+              className="inline-block px-8 py-3 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600"
+            >
               Start learning now
-            </button>
+            </Link>
           </div>
         </div>
       </section>

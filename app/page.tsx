@@ -17,9 +17,9 @@ export default function Home() {
             {/* Left Content */}
             <div className="flex flex-col justify-center">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-8 leading-tight">
-                <span className="text-orange-400">SwiftEd</span> Online is now
+                <span className="text-orange-400">SwiftEd</span> Build smarter learning paths 
                 <br />
-                much easier
+                with AI
               </h1>
 
               <div className="mb-8">
@@ -67,9 +67,12 @@ export default function Home() {
                     <p className="text-sm font-semibold text-gray-900">Latest AI Models</p>
                   </div>
                 </div>
-                <button className="mt-2 px-5 py-2.5 bg-pink-500 text-white rounded-full text-sm font-medium hover:bg-pink-600 w-full transition-colors shadow-md">
+                <Link
+                  href="/signup"
+                  className="mt-2 px-5 py-2.5 bg-pink-500 text-white rounded-full text-sm font-medium hover:bg-pink-600 w-full transition-colors shadow-md inline-block text-center"
+                >
                   Join Now
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -265,20 +268,9 @@ export default function Home() {
             <span className="text-white text-sm font-medium">Learn With AI</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Master Any Subject?</h2>
-          <p className="text-gray-300 mb-8">
-            Subscribe to our newsletter and get exclusive updates, study tips, and new features delivered to your inbox.
+          <p className="text-gray-300 mb-0">
+            Get started with SwiftEd today and explore AI-powered learning tools designed to help you study smarter.
           </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Your Email"
-              className="flex-1 px-4 py-3 rounded-full bg-slate-800 text-white placeholder-gray-400 border border-slate-700 focus:outline-none focus:border-teal-500"
-            />
-            <button className="px-8 py-3 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600 transition whitespace-nowrap">
-              Subscribe
-            </button>
-          </div>
         </div>
       </section>
 
