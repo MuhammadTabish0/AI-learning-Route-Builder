@@ -268,20 +268,9 @@ export default function Home() {
             <span className="text-white text-sm font-medium">Learn With AI</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Master Any Subject?</h2>
-          <p className="text-gray-300 mb-8">
-            Subscribe to our newsletter and get exclusive updates, study tips, and new features delivered to your inbox.
+          <p className="text-gray-300 mb-0">
+            Get started with SwiftEd today and explore AI-powered learning tools designed to help you study smarter.
           </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Your Email"
-              className="flex-1 px-4 py-3 rounded-full bg-slate-800 text-white placeholder-gray-400 border border-slate-700 focus:outline-none focus:border-teal-500"
-            />
-            <button className="px-8 py-3 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600 transition whitespace-nowrap">
-              Subscribe
-            </button>
-          </div>
         </div>
       </section>
 

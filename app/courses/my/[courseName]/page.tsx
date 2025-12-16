@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import type { CourseRoadmapResponse } from "@/ai/fullCourseGenerator"
+import Link from "next/link"
 
 export default function MyCoursePage({ params }: { params: Promise<{ courseName: string }> }) {
   const resolvedParams = use(params)
@@ -308,9 +309,12 @@ export default function MyCoursePage({ params }: { params: Promise<{ courseName:
               SwiftEd brings personalized roadmaps, AI summaries, and quizzes to your screen – making online learning
               focused and engaging
             </p>
-            <button className="px-8 py-3 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600">
+            <Link
+              href="/signup"
+              className="inline-block px-8 py-3 bg-teal-500 text-white rounded-full font-medium hover:bg-teal-600"
+            >
               Start learning now
-            </button>
+            </Link>
           </div>
         </div>
       </section>
