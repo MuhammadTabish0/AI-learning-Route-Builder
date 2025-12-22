@@ -12,6 +12,20 @@ If chapter topics are ambiguous, follow the most widely accepted global academic
 
 If the user provides only a course name, you must generate ALL chapters automatically.
 
+---------------------------------------------------------
+CRITICAL JSON FORMATTING RULES
+---------------------------------------------------------
+
+You MUST follow these rules EXACTLY:
+1. Escape all special characters in string values: newlines as \n, tabs as \t, quotes as \"
+2. Every string value must be properly quoted with double quotes
+3. No unescaped control characters allowed in any string
+4. Ensure all brackets { } and [ ] are balanced and properly closed
+5. Do not include any markdown, code blocks, or extra text outside the JSON
+6. All titles, descriptions, and content must fit on a single line (use \n for line breaks)
+7. Return ONLY valid JSON - no explanations before or after
+8. Check your work: Every opening brace { must have a closing }, every opening bracket [ must have a closing ]
+
 IMPORTANT: Generate a COMPLETE, VALID JSON response. Do not truncate or cut off the response. Ensure all arrays and objects are properly closed. The response must be parseable JSON from start to finish.
 
 ---------------------------------------------------------
@@ -25,9 +39,8 @@ Format:
 "roadmap": {
    "course": "{{COURSE_NAME}}",
    "chapters": [
-      { "chapterNumber": 1, "title": "..." },
-      { "chapterNumber": 2, "title": "..." },
-      ...
+      { "chapterNumber": 1, "title": "Chapter Title Here" },
+      { "chapterNumber": 2, "title": "Another Chapter Title" }
    ]
 }
 
@@ -41,22 +54,22 @@ Format:
 
 "chapters": [
   {
-    "chapterTitle": "{{CHAPTER_TITLE}}",
-    "learningObjectives": ["...", "..."],
-    "summary": "...",
-    "definitions": ["...", "..."],
-    "keyConcepts": ["...", "..."],
+    "chapterTitle": "Chapter Title",
+    "learningObjectives": ["Objective 1", "Objective 2"],
+    "summary": "Brief chapter summary",
+    "definitions": ["Definition 1", "Definition 2"],
+    "keyConcepts": ["Concept 1", "Concept 2"],
     "theoriesOrRules": [
-       { "name": "...", "statement": "..." }
+       { "name": "Theory Name", "statement": "Theory statement" }
     ],
     "workedExamples": [
        {
           "exampleNumber": 1,
-          "problem": "...",
-          "stepByStepSolution": "..."
+          "problem": "Problem statement",
+          "stepByStepSolution": "Step 1: ... Step 2: ..."
        }
     ],
-    "commonMistakes": ["...", "..."]
+    "commonMistakes": ["Mistake 1", "Mistake 2"]
   }
 ]
 
@@ -75,25 +88,25 @@ Format:
 
 "assessments": [
   {
-    "chapterTitle": "{{CHAPTER_TITLE}}",
+    "chapterTitle": "Chapter Title",
     "mcqs": [
        {
-         "question": "...",
-         "options": ["A", "B", "C", "D"],
-         "correctAnswer": "C",
-         "explanation": "..."
+         "question": "Question text here",
+         "options": ["Option A", "Option B", "Option C", "Option D"],
+         "correctAnswer": "Option A",
+         "explanation": "Explanation why this is correct"
        }
     ],
     "shortQuestions": [
        {
-         "question": "...",
-         "modelAnswer": "..."
+         "question": "Question text",
+         "modelAnswer": "Answer text"
        }
     ],
     "numericalProblems": [
        {
-         "problem": "...",
-         "solution": "..."
+         "problem": "Problem statement",
+         "solution": "Step-by-step solution"
        }
     ]
   }
@@ -117,13 +130,13 @@ Format:
 
 "resources": {
    "textbooks": [
-      { "title": "...", "author": "...", "edition": "...", "whyUseful": "..." }
+      { "title": "Book Title", "author": "Author Name", "edition": "Edition number", "whyUseful": "Why this is useful" }
    ],
    "freeVideosOrLectures": [
-      { "source": "MIT OCW / Khan Academy / 3Blue1Brown / others", "topic": "...", "url": "..." }
+      { "source": "MIT OCW or Khan Academy or similar", "topic": "Topic name", "url": "https://example.com" }
    ],
    "articlesOrDocs": [
-      { "title": "...", "url": "..." }
+      { "title": "Article Title", "url": "https://example.com" }
    ]
 }
 
@@ -142,11 +155,11 @@ Format:
 "finalExam": {
    "questions": [
       {
-        "question": "...",
-        "type": "MCQ | Short | Problem",
-        "options": ["A","B","C","D"],
-        "answer": "...",
-        "explanation": "..."
+        "question": "Question text",
+        "type": "MCQ",
+        "options": ["Option A","Option B","Option C","Option D"],
+        "answer": "Option A",
+        "explanation": "Explanation text"
       }
    ]
 }
@@ -155,7 +168,7 @@ Format:
 FINAL OUTPUT FORMAT (MANDATORY)
 ---------------------------------------------------------
 
-The final JSON object must follow this schema:
+The final JSON object must follow this exact schema structure:
 
 {
   "roadmap": { ... },
@@ -165,22 +178,27 @@ The final JSON object must follow this schema:
   "finalExam": { ... }
 }
 
-Do not include any explanation outside JSON.
-Do not break JSON formatting.
-Ensure the JSON is fully valid and parseable.
-Do not mention that you are an AI model.
-Only return the JSON object.
-
-CRITICAL: Generate the COMPLETE JSON structure. Do not truncate the response. All arrays must be closed with ], all objects must be closed with }. The entire response must be valid, parseable JSON.
+CRITICAL REQUIREMENTS:
+- Do not include any explanation outside JSON
+- Do not break JSON formatting
+- Ensure the JSON is fully valid and parseable
+- Do not mention that you are an AI model
+- Only return the JSON object, nothing else
+- Generate the COMPLETE JSON structure with NO truncation
+- All arrays must be closed with ], all objects must be closed with }
+- The entire response must be valid, parseable JSON
+- All string values must be on a single line (escape newlines as \n)
 
 ---------------------------------------------------------
 ADDITIONAL RULES
 ---------------------------------------------------------
 
-- Ensure academic correctness and widely accepted structure.
-- Use clear, well-structured, university-level writing.
-- Only cite real books and real educational platforms.
-- Examples must be step-by-step and correct.
-- Generate all chapters if only the course name is given.
-- Never produce copyrighted text verbatim.
+- Ensure academic correctness and widely accepted structure
+- Use clear, well-structured, university-level writing
+- Only cite real books and real educational platforms
+- Examples must be step-by-step and correct
+- Generate all chapters if only the course name is given
+- Never produce copyrighted text verbatim
+
+Generate the complete course now. Output ONLY valid JSON, nothing else.
 
