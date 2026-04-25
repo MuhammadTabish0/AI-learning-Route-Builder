@@ -516,7 +516,22 @@ export async function generateFullCourse(
 
     // Generate roadmap and resources in a single call
     console.log('Generating roadmap and resources...');
-    const roadmapTemplate = await loadPromptTemplate('roadmap-only');
+    const roadmapTemplate = await 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    Template('roadmap-only');
     const roadmapPrompt = replaceTemplateVariables(roadmapTemplate, { COURSE_NAME: courseName });
     const response = await callLLM(roadmapPrompt, 'gemini-2.5-flash');
     const courseData = parseJSONResponse<CourseRoadmapResponse>(response);
