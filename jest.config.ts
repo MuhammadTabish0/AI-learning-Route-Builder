@@ -13,6 +13,10 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
+  testMatch: [
+    '**/__tests__/**/*.test.ts',
+    '**/__integration_tests__/**/*.test.ts',
+  ],
   collectCoverageFrom: [
     'lib/**/*.{js,jsx,ts,tsx}',
     'app/api/**/*.{js,jsx,ts,tsx}',

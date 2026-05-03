@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/22</span>
+                <span class='fraction'>22/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/22</span>
+                <span class='fraction'>22/22</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -86,51 +86,51 @@
 <a name='L21'></a><a href='#L21'>21</a>
 <a name='L22'></a><a href='#L22'>22</a>
 <a name='L23'></a><a href='#L23'>23</a>
-<a name='L24'></a><a href='#L24'>24</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L24'></a><a href='#L24'>24</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import { NextResponse } from 'next/server';</span></span></span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >/**</span>
-<span class="cstat-no" title="statement not covered" > * GET /api/test-env</span>
-<span class="cstat-no" title="statement not covered" > * Test endpoint to check if environment variables are loaded</span>
-<span class="cstat-no" title="statement not covered" > */</span>
-<span class="cstat-no" title="statement not covered" >export async function GET() {</span>
-<span class="cstat-no" title="statement not covered" >  const apiKey = process.env.GEMINI_API_KEY;</span>
-<span class="cstat-no" title="statement not covered" >  const hasKey = !!apiKey;</span>
-<span class="cstat-no" title="statement not covered" >  const keyLength = apiKey?.length || 0;</span>
-<span class="cstat-no" title="statement not covered" >  const keyPrefix = apiKey?.substring(0, 10) || 'N/A';</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >  return NextResponse.json({</span>
-<span class="cstat-no" title="statement not covered" >    hasApiKey: hasKey,</span>
-<span class="cstat-no" title="statement not covered" >    keyLength,</span>
-<span class="cstat-no" title="statement not covered" >    keyPrefix: hasKey ? `${keyPrefix}...` : 'N/A',</span>
-<span class="cstat-no" title="statement not covered" >    allEnvKeys: Object.keys(process.env).filter(k =&gt; k.includes('GEMINI') || k.includes('API')),</span>
-<span class="cstat-no" title="statement not covered" >    message: hasKey </span>
-<span class="cstat-no" title="statement not covered" >      ? 'API key is loaded successfully' </span>
-<span class="cstat-no" title="statement not covered" >      : 'API key is NOT loaded. Check your .env file and restart the server.',</span>
-<span class="cstat-no" title="statement not covered" >  });</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextResponse } from 'next/server';
+&nbsp;
+/**
+ * GET /api/test-env
+ * Test endpoint to check if environment variables are loaded
+ */
+export async function GET() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const hasKey = !!apiKey;
+  const keyLength = apiKey?.length || 0;
+  const keyPrefix = apiKey?.substring(0, 10) || 'N/A';
+&nbsp;
+  return NextResponse.json({
+    hasApiKey: hasKey,
+    keyLength,
+    keyPrefix: hasKey ? `${keyPrefix}...` : 'N/A',
+    allEnvKeys: Object.keys(process.env).filter(k =&gt; k.includes('GEMINI') || k.includes('API')),
+    message: hasKey 
+      ? 'API key is loaded successfully' 
+      : 'API key is NOT loaded. Check your .env file and restart the server.',
+  });
+}
 &nbsp;
 &nbsp;</pre></td></tr></table></pre>
 
@@ -139,7 +139,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-03T11:39:09.262Z
+                at 2026-05-03T13:29:01.125Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
